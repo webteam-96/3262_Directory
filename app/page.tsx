@@ -1,66 +1,165 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Image from 'next/image';
+import Link from 'next/link';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import ScrollToTop from '@/components/ScrollToTop';
+import BulkCommitteePDFButton from '@/components/BulkCommitteePDFButton';
+import { fetchCommitteeList } from '@/lib/api';
 
-export default function Home() {
+const COMMITTEE_COLORS = ['#009fb4', '#179448', '#b37eb5', '#ed721d'];
+
+export default async function HomePage() {
+  let withCat: any[] = [];
+  try {
+    const data = await fetchCommitteeList();
+    withCat = data.withCat;
+  } catch {
+    // fail silently
+  }
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="boxed_wrapper">
+      <Header />
+
+      <section className="page-title centred pd-100">
+        <div
+          className="bg-layer"
+          style={{ backgroundImage: 'url(/assets/images/banner/banner-4.jpg)' }}
+        ></div>
+        <div className="auto-container">
+          <div className="content-box justify-content-center pd-26 mb-3">
+            <div className="title">
+              <h1>DIGITAL DIRECTORY 2025-26</h1>
+            </div>
+          </div>
+
+          <div className="content-box p-3 justify-content-center">
+            <div className="row align-items-center">
+              <div className="col-md-4 col-12">
+                <div className="team-block-one">
+                  <div className="inner-box">
+                    <div className="image-box">
+                      <figure className="image">
+                        <Image
+                          src="/assets/images/president.jpg"
+                          alt="RI President"
+                          width={200}
+                          height={250}
+                          style={{ objectFit: 'cover' }}
+                          unoptimized
+                        />
+                      </figure>
+                    </div>
+                    <div className="lower-content">
+                      <h3>Francesco Arezzo</h3>
+                      <span className="designation">Rotary International President 2025-26</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-4 col-12">
+                <div className="row">
+                  <div className="col-md-6 col-12">
+                    <figure className="image">
+                      <Image src="/assets/images/ri-logo.png" alt="RI Logo" width={120} height={80} unoptimized />
+                    </figure>
+                  </div>
+                  <div className="col-md-6 col-12">
+                    <figure className="image">
+                      <Image src="/assets/images/dist-logo.png" alt="District Logo" width={120} height={80} unoptimized />
+                    </figure>
+                  </div>
+                </div>
+                <hr />
+                <div className="row align-items-center">
+                  <div className="col-md-6 col-12">
+                    <figure className="image">
+                      <Image src="/assets/images/unite-forgood.png" alt="Unite For Good" width={120} height={80} className="main-logo" unoptimized />
+                    </figure>
+                  </div>
+                  <div className="col-md-6 col-12">
+                    <figure className="image">
+                      <Image src="/assets/images/3020logo.png" alt="3020 Logo" width={120} height={80} className="main-logo" unoptimized />
+                    </figure>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-4 col-12">
+                <div className="team-block-one">
+                  <div className="inner-box">
+                    <div className="image-box">
+                      <figure className="image">
+                        <Image
+                          src="/assets/images/dg-pic.jpg"
+                          alt="District Governor"
+                          width={200}
+                          height={250}
+                          style={{ objectFit: 'cover' }}
+                          unoptimized
+                        />
+                      </figure>
+                    </div>
+                    <div className="lower-content">
+                      <h3>Yeluri Kalyan Chakravarthy</h3>
+                      <span className="designation">District Governor 2025-26</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+      </section>
+
+      <section className="chooseus-section bg-color-1">
+        <div className="auto-container">
+          <div className="row justify-content-center">
+            <div className="col-md-4 col-12">
+              <Link href="/executive-committee" className="club-crd1">
+                <div className="cat-text">Executive Committee</div>
+              </Link>
+            </div>
+            <div className="col-md-4 col-12">
+              <Link href="/clubs" className="club-crd">
+                <div className="cat-text">Rotary Clubs of District 3262</div>
+              </Link>
+            </div>
+            <div className="col-md-4 col-12">
+              <Link href="/dg-directory" className="club-crd1">
+                <div className="cat-text">District Governors 2026-27</div>
+              </Link>
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-center mb-4">
+            <BulkCommitteePDFButton
+              committees={withCat.map((c: any) => ({
+                id:   String(c.Fk_DistrictCommitteeID),
+                name: c.name || '',
+              }))}
             />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
+
+          <div className="row justify-content-center align-items-center mb-5">
+            {withCat.map((committee: any, index: number) => (
+              <div key={committee.Fk_DistrictCommitteeID} className="col-md-4 col-12">
+                <Link
+                  href={`/committee/${committee.Fk_DistrictCommitteeID}?title=${encodeURIComponent(committee.name)}`}
+                  className="avenu-crd"
+                  style={{ backgroundColor: COMMITTEE_COLORS[index % COMMITTEE_COLORS.length] }}
+                >
+                  <div className="cat-text">{committee.name}</div>
+                </Link>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
+      </section>
+
+      <Footer />
+      <ScrollToTop />
     </div>
   );
 }

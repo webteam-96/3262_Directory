@@ -1,0 +1,144 @@
+/* ── Card shell ── */
+.card {
+  position: relative;
+  width: 595px;
+  height: 165px;
+  background: #ffffff;
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Shared pill ── */
+.pill {
+  position: absolute;
+  height: 16px;
+}
+
+/* ── Name ── */
+.name {
+  position: absolute;
+  top: 15px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #000000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 290px;
+  z-index: 1;
+}
+
+/* ── Photos ── */
+.photo {
+  position: absolute;
+  width: 80px;
+  height: 100px;
+  object-fit: cover;
+  top: 30px;
+  background: #d0d0d0;
+}
+
+/* ── Info text (shared) ── */
+.info {
+  position: absolute;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #000000;
+  line-height: 18px;
+}
+
+/* ── Divider ── */
+.divider {
+  position: absolute;
+  width: 1px;
+  height: 88px;
+  top: 46px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* ── SVG dots ── */
+.dots {
+  position: absolute;
+  width: 50px;
+  height: 23px;
+}
+
+/* ── Pagination ── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+.pageBtn {
+  padding: 6px 14px;
+  border: 1px solid #304890;
+  background: #ffffff;
+  color: #304890;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pageBtnActive {
+  background: #304890;
+  color: #ffffff;
+}
+
+/* ── Error ── */
+.error {
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #c00;
+  padding: 24px 0;
+}
+
+.retryBtn {
+  margin-top: 10px;
+  padding: 8px 20px;
+  background: #304890;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+/* ── Skeleton shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton {
+  position: relative;
+  width: 595px;
+  height: 165px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #e8e8e8;
+  background-image: linear-gradient(
+    90deg,
+    #e8e8e8 0px,
+    #f4f4f4 200px,
+    #e8e8e8 400px
+  );
+  background-size: 600px 165px;
+  animation: shimmer 1.4s infinite linear;
+}

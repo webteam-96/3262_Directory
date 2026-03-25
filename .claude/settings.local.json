@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"pdf\\\\|PDF\\\\|image\\\\|img\\\\|logo\\\\|photo\\\\|src\" E:/websites/directory/3262/3020-nextjs/app/committee/[committeeId]/page.tsx)",
+      "Bash(ls:*)",
+      "Bash(xargs grep:*)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''main'''',''''''''\\), d.get\\(''''module'''',''''''''\\), d.get\\(''''types'''',''''''''\\)\\)\")",
+      "Bash(grep:*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)",
+      "Bash(npx next:*)",
+      "Bash(sed -i \"/import Preloader from ''@\\\\/components\\\\/Preloader'';/d\" app/page.tsx app/clubs/page.tsx \"app/clubs/[groupId]/page.tsx\" \"app/executive-committee/page.tsx\" \"app/committee/[committeeId]/page.tsx\")",
+      "Bash(sed -i \"/<Preloader \\\\/>/d\" app/page.tsx app/clubs/page.tsx \"app/clubs/[groupId]/page.tsx\" \"app/executive-committee/page.tsx\" \"app/committee/[committeeId]/page.tsx\")",
+      "Bash(curl -s -X POST \"http://rotaryindiaapi.rosteronwheels.com/api/Directory/Club_Details_District_Committee_PDF\" -H \"Content-Type: application/json\" -d '{\"\"\"\"District_number\"\"\"\":\"\"\"\"3262\"\"\"\",\"\"\"\"year_filter\"\"\"\":\"\"\"\"2026-2027\"\"\"\"}')",
+      "Bash(curl -s -X POST \"http://rotaryindiaapi.rosteronwheels.com/api/Directory/get_district_governor_details_PDF\" -H \"Content-Type: application/json\" -d '{\"\"\"\"year_filter\"\"\"\":\"\"\"\"2026-2027\"\"\"\"}')",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); clubs=d[''''ClubDetails_AG_Details'''']; print\\(''''Total clubs:'''', len\\(clubs\\)\\); print\\(''''Keys:'''', list\\(clubs[0].keys\\(\\)\\)\\); print\\(''''First 3:''''\\); [print\\(c\\) for c in clubs[:3]]\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); dgs=d[''''DG_Details'''']; print\\(''''Total DGs:'''', len\\(dgs\\)\\); print\\(''''Keys:'''', list\\(dgs[0].keys\\(\\)\\)\\)\")",
+      "Bash(curl -s -X POST \"https://rotaryindiaapi.rosteronwheels.com/api/District/Get_Clubs_BOD_Details\" -H \"Content-Type: application/json\" -d '{\"\"\"\"groupId\"\"\"\":\"\"\"\"90704\"\"\"\",\"\"\"\"financialyear\"\"\"\":\"\"\"\"2026-2027\"\"\"\"}')",
+      "Bash(curl -s -X POST \"https://rotaryindiaapi.rosteronwheels.com/api/District/Get_Clubs_BOD\" -H \"Content-Type: application/json\" -d '{\"\"\"\"groupId\"\"\"\":\"\"\"\"31375\"\"\"\",\"\"\"\"financialyear\"\"\"\":\"\"\"\"2026-2027\"\"\"\"}')",
+      "Bash(node -e \"const d=require\\(''./api_response.json''\\); const ps=d.President_And_Secretary; if\\(ps&&ps[0]\\) console.log\\(JSON.stringify\\(Object.keys\\(ps[0]\\),null,2\\)\\);\")",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(cat E:/websites/directory/3262/3262-nextjs/app/api/club-data/[groupId]/route.ts)",
+      "Bash(cat E:/websites/directory/3262/3262-nextjs/app/clubs/[groupId]/page.tsx)",
+      "Bash(python3:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); r=d.get\\(''''TBDistrictCommitteeDetailsResult'''',{}\\).get\\(''''Result'''',{}\\).get\\(''''districtCommitteeWithoutCatList'''',[]\\); print\\(list\\(r[0].keys\\(\\)\\) if r else ''''empty''''\\)\")"
+    ]
+  }
+}
