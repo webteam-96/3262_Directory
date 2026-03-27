@@ -83,9 +83,10 @@ export default function DownloadPDFButton() {
       const BG_H      = Math.round(B5_H_MM * 8);  // 2000 px
       const pxPerMM   = BG_W / B5_W_MM;           // 8 px/mm
 
-      const bgDataUrl = await svgToPngDataUrl('/assets/border-bg.svg', BG_W, BG_H);
-      const bgBlob    = await fetch(bgDataUrl).then((r) => r.blob());
-      const bgBmp     = await createImageBitmap(bgBlob);
+      const [rightBmp, leftBmp] = await Promise.all([
+        svgToPngDataUrl('/assets/border-right.svg', BG_W, BG_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+        svgToPngDataUrl('/assets/border-left.svg',  BG_W, BG_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+      ]);
 
       // Positions in px on the full-page canvas
       const xPx         = Math.round(SIDE_PAD_MM * pxPerMM);
@@ -101,6 +102,7 @@ export default function DownloadPDFButton() {
       const makePage = (
         c1: HTMLCanvasElement | null,
         c2: HTMLCanvasElement | null,
+        bgBmp: ImageBitmap,
       ): string => {
         const pg  = document.createElement('canvas');
         pg.width  = BG_W;
@@ -138,6 +140,7 @@ export default function DownloadPDFButton() {
 
       const SCALE = 2;
       const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
+      let pageIndex = 0;
 
       for (let i = 0; i < cardEls.length; i += 2) {
         if (i > 0) pdf.addPage('b5', 'portrait');
@@ -161,7 +164,10 @@ export default function DownloadPDFButton() {
           restore2();
         }
 
-        pdf.addImage(makePage(canvas1, canvas2), 'PNG', 0, 0, B5_W_MM, B5_H_MM);
+        // odd pages (1,3,5…) → right SVG; even pages (2,4,6…) → left SVG
+        const bgBmp = pageIndex % 2 === 0 ? rightBmp : leftBmp;
+        pageIndex++;
+        pdf.addImage(makePage(canvas1, canvas2, bgBmp), 'PNG', 0, 0, B5_W_MM, B5_H_MM);
       }
 
       pdf.save('dg-directory.pdf');

@@ -48,52 +48,52 @@ function Photo({ src, alt }: { src?: string; alt: string }) {
     <img
       src={imgSrc}
       alt={alt}
-      width={150}
-      height={150}
+      width={120}
+      height={120}
       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/blank-profile.webp'; }}
-      style={{ objectFit: 'cover', display: 'block', width: 150, height: 150, borderRadius: 4, border: '1px solid #ddd' }}
+      style={{ objectFit: 'cover', display: 'block', width: 120, height: 120, borderRadius: 4, border: '1px solid #ddd' }}
     />
   );
 }
 
 // ── Info column (center) ───────────────────────────────────────────────────
-function InfoCol({ rid, dob, dow, classification, mobile, email }: {
+function InfoCol({ rid, dob, dow, classification, mobile }: {
   rid: string; dob: string; dow?: string;
-  classification: string; mobile: string; email: string;
+  classification: string; mobile: string;
 }) {
   const style: React.CSSProperties = {
-    fontSize: 26, fontFamily: 'Dubai, sans-serif',
+    fontSize: 22, fontFamily: 'Dubai, sans-serif',
     color: 'black', lineHeight: '28px',
     marginBottom: 10,
   };
   return (
-    <div style={{ flex: 2, padding: '0 10px', minWidth: 0 }}>
+    <div style={{ flex: 2, padding: '10px 14px', minWidth: 0 }}>
       <div style={style}><span>ID: {rid}&nbsp;&nbsp;</span><span>DOB: {dob}</span></div>
       <div style={style}>DOW: {dow}</div>
       <div style={style}>Cl: {classification}</div>
       <div style={style}>Mobile: {mobile}</div>
-      <div style={{ ...style, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-        {'Email: '}
-        {email.length > 35
-          ? email.slice(0, 35) + '\n' + email.slice(35)
-          : email}
-      </div>
     </div>
   );
 }
 
 // ── Address column (right) ─────────────────────────────────────────────────
-function AddressCol({ address, club, spouseName }: {
-  address: string; club: string; spouseName?: string;
+function AddressCol({ address, club, spouseName, email }: {
+  address: string; club: string; spouseName?: string; email: string;
 }) {
   const style: React.CSSProperties = {
-    fontSize: 26, fontFamily: 'Dubai, sans-serif',
+    fontSize: 22, fontFamily: 'Dubai, sans-serif',
     color: 'black', lineHeight: '28px',
     wordWrap: 'break-word',
     marginBottom: 10,
   };
   return (
-    <div style={{ flex: 3, padding: '0 10px', minWidth: 0 }}>
+    <div style={{ flex: 3, padding: '10px 14px', minWidth: 0 }}>
+      <div style={{ ...style, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+        {'Email: '}
+        {email.length > 30
+          ? email.slice(0, 30) + '\n' + email.slice(30)
+          : email}
+      </div>
       <div style={style}>Add: {address}</div>
       <div style={style}>H.Club: {club}</div>
       <div style={style}>Spouse: {spouseName}</div>
@@ -195,12 +195,12 @@ export default function MemberCard({
   const info = (
     <InfoCol
       rid={rid} dob={dob} dow={dow}
-      classification={classification} mobile={mobile} email={email}
+      classification={classification} mobile={mobile}
     />
   );
 
   const addr = (
-    <AddressCol address={address} club={club} spouseName={spouseName} />
+    <AddressCol address={address} club={club} spouseName={spouseName} email={email} />
   );
 
   return (
@@ -208,7 +208,7 @@ export default function MemberCard({
       position: 'relative',
       background: 'white',
       overflow: 'hidden',
-      minHeight: 242,
+      minHeight: 200,
       marginBottom: 18,
       width: '100%',
       boxSizing: 'border-box',
@@ -263,9 +263,9 @@ export default function MemberCard({
       {/* Content body */}
       <div style={{
         display: 'flex',
-        alignItems: 'center',
-        paddingTop: 42,
-        paddingBottom: 42,
+        alignItems: 'flex-start',
+        paddingTop: 32,
+        paddingBottom: 32,
         paddingLeft: 8,
         paddingRight: 8,
       }}>

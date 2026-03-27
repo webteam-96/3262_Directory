@@ -73,10 +73,11 @@ export default function BulkDownloadButton({ clubs }: { clubs: any[] }) {
     const { jsPDF }   = await import('jspdf');
     const JSZip       = (await import('jszip')).default;
 
-    // Load SVG background once for all clubs (rasterised at output size)
-    const bgDataUrl = await svgToPngDataUrl('/assets/border-dynamic.svg', OUT_W, OUT_H);
-    const bgBlob    = await fetch(bgDataUrl).then((r) => r.blob());
-    const bgBmp     = await createImageBitmap(bgBlob);
+    // Load both SVG backgrounds once for all clubs
+    const [rightBmp, leftBmp] = await Promise.all([
+      svgToPngDataUrl('/assets/border-right.svg', OUT_W, OUT_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+      svgToPngDataUrl('/assets/border-left.svg',  OUT_W, OUT_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+    ]);
 
     const zip   = new JSZip();
     const total = clubsWithId.length;
@@ -136,7 +137,7 @@ export default function BulkDownloadButton({ clubs }: { clubs: any[] }) {
         const outY     = Math.round(TOP_PAD_MM  * OUT_PX_PER_MM);
         const outW     = Math.round(CONT_W      * OUT_PX_PER_MM);
 
-        const makePage = (contentC: HTMLCanvasElement, contentHPx: number): string => {
+        const makePage = (contentC: HTMLCanvasElement, contentHPx: number, bgBmp: ImageBitmap): string => {
           const pg  = document.createElement('canvas');
           pg.width  = OUT_W;
           pg.height = OUT_H;
@@ -153,13 +154,15 @@ export default function BulkDownloadButton({ clubs }: { clubs: any[] }) {
         const rowsPerPage = Math.max(1, Math.floor((pageHPx - hdrH) / rowHpx));
 
         const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
+        let pageIndex = 0;
 
         // Page 1
         const page1End = Math.min(tR + rows1Max * rowHpx, rendered.height);
         const p1 = document.createElement('canvas');
         p1.width = rendered.width; p1.height = page1End;
         p1.getContext('2d')!.drawImage(rendered, 0, 0, rendered.width, page1End, 0, 0, rendered.width, page1End);
-        pdf.addImage(makePage(p1, page1End), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
+        pdf.addImage(makePage(p1, page1End, pageIndex % 2 === 0 ? rightBmp : leftBmp), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
+        pageIndex++;
 
         // Page 2+
         let   nextRow   = rows1Max;
@@ -174,7 +177,8 @@ export default function BulkDownloadButton({ clubs }: { clubs: any[] }) {
           const ctx   = comp.getContext('2d')!;
           ctx.drawImage(rendered, 0, tH, rendered.width, hdrH, 0, 0, rendered.width, hdrH);
           ctx.drawImage(rendered, 0, tR + nextRow * rowHpx, rendered.width, rowsH, 0, hdrH, rendered.width, rowsH);
-          pdf.addImage(makePage(comp, hdrH + rowsH), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
+          pdf.addImage(makePage(comp, hdrH + rowsH, pageIndex % 2 === 0 ? rightBmp : leftBmp), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
+          pageIndex++;
           nextRow += rowsThisPage;
         }
 

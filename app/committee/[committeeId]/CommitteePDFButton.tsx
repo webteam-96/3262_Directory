@@ -10,7 +10,8 @@ const TOP_PAD_MM  = (64.8  / 708.66) * 250 + PX20_MM;
 const BOT_PAD_MM  = ((708.66 - 675) / 708.66) * 250 + PX20_MM;
 const SIDE_PAD_MM = PX20_MM;
 const CONT_W_MM   = B5_W_MM - SIDE_PAD_MM * 2;
-const CONT_H_MM   = B5_H_MM - TOP_PAD_MM - BOT_PAD_MM;
+const HEADING_H_MM   = 4;   // space reserved for committee name heading
+const CONT_H_MM   = B5_H_MM - TOP_PAD_MM - BOT_PAD_MM - HEADING_H_MM;
 const CARDS_PER_PAGE = 5;
 const GAP_MM      = 2;
 const CARD_SLOT_H_MM = (CONT_H_MM - GAP_MM * (CARDS_PER_PAGE - 1)) / CARDS_PER_PAGE;
@@ -66,7 +67,7 @@ function makePage(canvases: (HTMLCanvasElement | null)[], bgBmp: ImageBitmap): s
   ctx.drawImage(bgBmp, 0, 0, BG_W, BG_H);
 
   const xPx       = Math.round(SIDE_PAD_MM  * PX_PER_MM);
-  const yStart    = Math.round(TOP_PAD_MM   * PX_PER_MM);
+  const yStart    = Math.round((TOP_PAD_MM + HEADING_H_MM) * PX_PER_MM);
   const contentW  = Math.round(CONT_W_MM    * PX_PER_MM);
   const slotHpx   = Math.round(CARD_SLOT_H_MM * PX_PER_MM);
   const gapPx     = Math.round(GAP_MM       * PX_PER_MM);
@@ -111,13 +112,15 @@ export default function CommitteePDFButton({ title, filename }: Props) {
         import('jspdf'),
       ]);
 
-      setStatus('Loading background…');
-      const bgDataUrl = await svgToPngDataUrl('/assets/border-bg.svg', BG_W, BG_H);
-      const bgBlob    = await fetch(bgDataUrl).then(r => r.blob());
-      const bgBmp     = await createImageBitmap(bgBlob);
+      setStatus('Loading backgrounds…');
+      const [rightBmp, leftBmp] = await Promise.all([
+        svgToPngDataUrl('/assets/border-right.svg', BG_W, BG_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+        svgToPngDataUrl('/assets/border-left.svg',  BG_W, BG_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+      ]);
 
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
       const total = cardEls.length;
+      let pageIndex = 0;
 
       for (let i = 0; i < cardEls.length; i += CARDS_PER_PAGE) {
         if (i > 0) pdf.addPage('b5', 'portrait');
@@ -139,8 +142,19 @@ export default function CommitteePDFButton({ title, filename }: Props) {
 
         while (canvases.length < CARDS_PER_PAGE) canvases.push(null);
 
+        // odd pages (1,3,5…) → right SVG; even pages (2,4,6…) → left SVG
+        const bgBmp = pageIndex % 2 === 0 ? rightBmp : leftBmp;
+        pageIndex++;
+
         setStatus(`Building page ${Math.floor(i / CARDS_PER_PAGE) + 1}…`);
         pdf.addImage(makePage(canvases, bgBmp), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
+
+        // Committee name heading — sits in the reserved zone below the decorative border
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(11);
+        pdf.setTextColor(48, 72, 144); // #304890 navy
+        pdf.text(title, B5_W_MM / 2, TOP_PAD_MM + 4, { align: 'center' });
+        pdf.setTextColor(0, 0, 0);
       }
 
       pdf.save(filename);

@@ -14,7 +14,8 @@ const TOP_PAD_MM  = (64.8  / 708.66) * 250 + PX20_MM;
 const BOT_PAD_MM  = ((708.66 - 675) / 708.66) * 250 + PX20_MM;
 const SIDE_PAD_MM = PX20_MM;
 const CONT_W_MM   = B5_W_MM - SIDE_PAD_MM * 2;
-const CONT_H_MM   = B5_H_MM - TOP_PAD_MM - BOT_PAD_MM;
+const HEADING_H_MM   = 4;
+const CONT_H_MM   = B5_H_MM - TOP_PAD_MM - BOT_PAD_MM - HEADING_H_MM;
 const CARDS_PER_PAGE = 5;
 const GAP_MM         = 2;
 const CARD_SLOT_H_MM = (CONT_H_MM - GAP_MM * (CARDS_PER_PAGE - 1)) / CARDS_PER_PAGE;
@@ -67,7 +68,7 @@ function makePage(canvases: (HTMLCanvasElement | null)[], bgBmp: ImageBitmap): s
   ctx.drawImage(bgBmp, 0, 0, BG_W, BG_H);
 
   const xPx      = Math.round(SIDE_PAD_MM    * PX_PER_MM);
-  const yStart   = Math.round(TOP_PAD_MM     * PX_PER_MM);
+  const yStart   = Math.round((TOP_PAD_MM + HEADING_H_MM) * PX_PER_MM);
   const contentW = Math.round(CONT_W_MM      * PX_PER_MM);
   const slotHpx  = Math.round(CARD_SLOT_H_MM * PX_PER_MM);
   const gapPx    = Math.round(GAP_MM         * PX_PER_MM);
@@ -107,7 +108,8 @@ async function generateCommitteePDF(
   records: any[],
   html2canvas: any,
   jsPDF: any,
-  bgBmp: ImageBitmap,
+  rightBmp: ImageBitmap,
+  leftBmp: ImageBitmap,
   setStatus: (s: string) => void,
   committeeName: string,
   totalCommittees: number,
@@ -152,6 +154,7 @@ async function generateCommitteePDF(
   const cardEls = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-card]'));
   const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
   const total   = cardEls.length;
+  let pageIndex = 0;
 
   for (let i = 0; i < cardEls.length; i += CARDS_PER_PAGE) {
     if (i > 0) pdf.addPage('b5', 'portrait');
@@ -168,7 +171,17 @@ async function generateCommitteePDF(
     }
 
     while (canvases.length < CARDS_PER_PAGE) canvases.push(null);
+    // odd pages (1,3,5…) → right SVG; even pages (2,4,6…) → left SVG
+    const bgBmp = pageIndex % 2 === 0 ? rightBmp : leftBmp;
+    pageIndex++;
     pdf.addImage(makePage(canvases, bgBmp), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
+
+    // Committee name heading
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.setTextColor(48, 72, 144);
+    pdf.text(committeeName, B5_W_MM / 2, TOP_PAD_MM + 4, { align: 'center' });
+    pdf.setTextColor(0, 0, 0);
   }
 
   const bytes = pdf.output('arraybuffer') as ArrayBuffer;
@@ -208,11 +221,12 @@ export default function BulkCommitteePDFButton({ committees }: { committees: Com
         )
       );
 
-      // ── 2. Load SVG background once ──
-      setStatus('Loading background…');
-      const bgDataUrl = await svgToPngDataUrl('/assets/border-bg.svg', BG_W, BG_H);
-      const bgBlob    = await fetch(bgDataUrl).then(r => r.blob());
-      const bgBmp     = await createImageBitmap(bgBlob);
+      // ── 2. Load SVG backgrounds once ──
+      setStatus('Loading backgrounds…');
+      const [rightBmp, leftBmp] = await Promise.all([
+        svgToPngDataUrl('/assets/border-right.svg', BG_W, BG_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+        svgToPngDataUrl('/assets/border-left.svg',  BG_W, BG_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+      ]);
 
       // ── 3. Generate one PDF per committee, add to zip ──
       const zip = new JSZip.default();
@@ -220,9 +234,10 @@ export default function BulkCommitteePDFButton({ committees }: { committees: Com
       for (let i = 0; i < committees.length; i++) {
         const records = allData[i];
         if (records.length === 0) continue;
+        await new Promise(r => setTimeout(r, 0)); // yield to browser between committees
 
         const pdfBytes = await generateCommitteePDF(
-          records, html2canvas, jsPDF, bgBmp,
+          records, html2canvas, jsPDF, rightBmp, leftBmp,
           setStatus, committees[i].name,
           committees.length, i,
         );

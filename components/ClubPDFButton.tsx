@@ -94,8 +94,11 @@ export default function ClubPDFButton({ clubName }: { clubName: string }) {
       const html2canvas = (await import('html2canvas')).default;
       const { jsPDF }   = await import('jspdf');
 
-      // Rasterise SVG at the same size as the output page (no oversized intermediary)
-      const bgDataUrl = await svgToPngDataUrl('/assets/border-dynamic.svg', OUT_W, OUT_H);
+      // Rasterise both SVGs at output page size
+      const [rightBmp, leftBmp] = await Promise.all([
+        svgToPngDataUrl('/assets/border-right.svg', OUT_W, OUT_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+        svgToPngDataUrl('/assets/border-left.svg',  OUT_W, OUT_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
+      ]);
 
       const prevOverflow = el.style.overflow;
       el.style.overflow  = 'visible';
@@ -124,15 +127,11 @@ export default function ClubPDFButton({ clubName }: { clubName: string }) {
       const outY = Math.round(TOP_PAD_MM  * OUT_PX_PER_MM);
       const outW = Math.round(CONT_W      * OUT_PX_PER_MM);
 
-      // Pre-decode bg PNG into an ImageBitmap (already OUT_W × OUT_H)
-      const bgBlob = await fetch(bgDataUrl).then((r) => r.blob());
-      const bgBmp  = await createImageBitmap(bgBlob);
-
       /**
        * Composite white + SVG border + content into one OUT_W×OUT_H canvas.
        * Small size + JPEG = fast encode, small PDF, no image-boundary lines.
        */
-      const makePage = (contentC: HTMLCanvasElement, contentHPx: number): string => {
+      const makePage = (contentC: HTMLCanvasElement, contentHPx: number, bgBmp: ImageBitmap): string => {
         const pg  = document.createElement('canvas');
         pg.width  = OUT_W;
         pg.height = OUT_H;
@@ -152,10 +151,13 @@ export default function ClubPDFButton({ clubName }: { clubName: string }) {
 
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
 
+      let pageIndex = 0;
+
       // ── PAGE 1: details + table header + rows that fit ───────────────
       const page1End = Math.min(tR + rows1Max * rowHpx, canvas.height);
-      pdf.addImage(makePage(sliceCanvas(canvas, 0, page1End), page1End),
+      pdf.addImage(makePage(sliceCanvas(canvas, 0, page1End), page1End, pageIndex % 2 === 0 ? rightBmp : leftBmp),
         'JPEG', 0, 0, B5_W_MM, B5_H_MM);
+      pageIndex++;
 
       // ── SUBSEQUENT PAGES: table header + rows ────────────────────────
       let   nextRow   = rows1Max;
@@ -178,7 +180,9 @@ export default function ClubPDFButton({ clubName }: { clubName: string }) {
           0, tR + nextRow * rowHpx, canvas.width, rowsH,
           0, hdrH,                  canvas.width, rowsH);
 
-        pdf.addImage(makePage(comp, compositeH), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
+        // odd pages (1,3,5…) → right SVG; even pages (2,4,6…) → left SVG
+        pdf.addImage(makePage(comp, compositeH, pageIndex % 2 === 0 ? rightBmp : leftBmp), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
+        pageIndex++;
         nextRow += rowsThisPage;
       }
 

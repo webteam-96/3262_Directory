@@ -202,10 +202,10 @@ function DistrictCard({
         </div>
 
         {/* ── DG data rows ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, marginBottom: 4 }}>
 
           {/* Left DG photo */}
-          <div style={{ flexShrink: 0, paddingRight: 12, display: 'flex', alignItems: 'center' }}>
+          <div style={{ flexShrink: 0, paddingRight: 12, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
             <PhotoImg src={hasLeft ? dgLeft.profilephoto : undefined} alt="DG Left" size={120} />
           </div>
 
@@ -221,17 +221,17 @@ function DistrictCard({
           </div>
 
           {/* Right DG photo */}
-          <div style={{ flexShrink: 0, paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
+          <div style={{ flexShrink: 0, paddingLeft: 12, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
             <PhotoImg src={hasRight ? dgRight.profilephoto : undefined} alt="DG Right" size={120} />
           </div>
 
         </div>
 
         {/* ── Spouse data rows ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, marginBottom: 14 }}>
 
           {/* Left spouse photo */}
-          <div style={{ flexShrink: 0, paddingRight: 12, display: 'flex', alignItems: 'center' }}>
+          <div style={{ flexShrink: 0, paddingRight: 12, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
             <PhotoImg src={hasLeft ? dgLeft.Spouse_Photo : undefined} alt="Spouse Left" size={120} />
           </div>
 
@@ -247,7 +247,7 @@ function DistrictCard({
           </div>
 
           {/* Right spouse photo */}
-          <div style={{ flexShrink: 0, paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
+          <div style={{ flexShrink: 0, paddingLeft: 12, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
             <PhotoImg src={hasRight ? dgRight.Spouse_Photo : undefined} alt="Spouse Right" size={120} />
           </div>
 
