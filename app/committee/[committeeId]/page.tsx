@@ -40,7 +40,7 @@ export default async function CommitteeDetailsPage({
   let records: any[] = [];
   try {
     const raw = await fetchCommitteeDetails(committeeId);
-    records = [...raw].sort((a: any, b: any) =>
+records = [...raw].sort((a: any, b: any) =>
       (a.ClubName || '').toLowerCase().localeCompare((b.ClubName || '').toLowerCase())
     );
   } catch {
@@ -90,7 +90,7 @@ export default async function CommitteeDetailsPage({
                 rid={record.RotaryID?.trim()  || ''}
                 img={record.img               || ''}
                 spouseName={record.Spouse_name || record.SpouseName || ''}
-                spouseImg={record.Spouse_Photo || record.SpousePhoto || ''}
+                spouseImg={record.SpousePhoto ? `https://rotaryindia.org/Documents/directory/${record.SpousePhoto}` : ''}
               />
           ))}
         </div>

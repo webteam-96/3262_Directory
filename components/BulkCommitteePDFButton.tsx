@@ -141,7 +141,7 @@ async function generateCommitteePDF(
               rid={record.RotaryID?.trim()  || ''}
               img={record.img               || ''}
               spouseName={record.Spouse_name || record.SpouseName || ''}
-              spouseImg={record.Spouse_Photo || record.SpousePhoto || ''}
+              spouseImg={record.SpousePhoto ? `https://rotaryindia.org/Documents/directory/${record.SpousePhoto}` : ''}
             />
           </div>
         ))}
