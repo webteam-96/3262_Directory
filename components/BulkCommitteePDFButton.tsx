@@ -7,11 +7,11 @@ import React from 'react';
 import MemberCard from './MemberCard';
 
 // ── PDF constants ─────────────────────────────────────────────────────────────
-const B5_W_MM     = 176;
-const B5_H_MM     = 250;
+const B5_W_MM     = 142;
+const B5_H_MM     = 215;
 const PX20_MM     = 20 * 25.4 / 96;
-const TOP_PAD_MM  = (64.8  / 708.66) * 250 + PX20_MM;
-const BOT_PAD_MM  = ((708.66 - 675) / 708.66) * 250 + PX20_MM;
+const TOP_PAD_MM  = (64.8  / 708.66) * 215 + PX20_MM;
+const BOT_PAD_MM  = ((708.66 - 675) / 708.66) * 215 + PX20_MM;
 const SIDE_PAD_MM = PX20_MM;
 const CONT_W_MM   = B5_W_MM - SIDE_PAD_MM * 2;
 const HEADING_H_MM   = 4;
@@ -19,7 +19,7 @@ const CONT_H_MM   = B5_H_MM - TOP_PAD_MM - BOT_PAD_MM - HEADING_H_MM;
 const CARDS_PER_PAGE = 5;
 const GAP_MM         = 2;
 const CARD_SLOT_H_MM = (CONT_H_MM - GAP_MM * (CARDS_PER_PAGE - 1)) / CARDS_PER_PAGE;
-const PX_PER_MM      = 8;
+const PX_PER_MM      = 16;
 const BG_W           = Math.round(B5_W_MM * PX_PER_MM);
 const BG_H           = Math.round(B5_H_MM * PX_PER_MM);
 
@@ -75,13 +75,18 @@ function makePage(canvases: (HTMLCanvasElement | null)[], bgBmp: ImageBitmap): s
 
   canvases.forEach((c, i) => {
     if (!c) return;
-    const dy = yStart + i * (slotHpx + gapPx);
-    const dw = contentW;
-    const dh = Math.round(c.height * contentW / c.width);
-    ctx.drawImage(c, 0, 0, c.width, c.height, xPx, dy, dw, dh);
+    const slotTop = yStart + i * (slotHpx + gapPx);
+    // Fit card into its slot (width AND height) so a tall card shrinks
+    // instead of bleeding into the next slot's space.
+    const scale = Math.min(contentW / c.width, slotHpx / c.height);
+    const dw = Math.round(c.width  * scale);
+    const dh = Math.round(c.height * scale);
+    const dx = xPx + Math.round((contentW - dw) / 2);
+    const dy = slotTop + Math.round((slotHpx - dh) / 2);
+    ctx.drawImage(c, 0, 0, c.width, c.height, dx, dy, dw, dh);
   });
 
-  return pg.toDataURL('image/jpeg', 0.88);
+  return pg.toDataURL('image/jpeg', 0.95);
 }
 
 // ── Data helpers ──────────────────────────────────────────────────────────────
@@ -124,27 +129,30 @@ async function generateCommitteePDF(
   flushSync(() => {
     root.render(
       <>
-        {records.map((record, idx) => (
-          <div key={idx} data-pdf-card={String(idx)}>
-            <MemberCard
-              index={idx}
-              designation={resolveDesignation(record.DistrictDesignation || '')}
-              name={record.name             || ''}
-              club={record.ClubName         || ''}
-              classification={record.Keywords?.trim() || ''}
-              mobile={record.MobileNumber   || ''}
-              blood={record.Bloodgrp        || ''}
-              email={record.MailID          || ''}
-              address={record.Address?.trim() || ''}
-              dob={formatDayMonth(record.DOB)}
-              dow={formatDayMonth(record.DOA || record.DOW)}
-              rid={record.RotaryID?.trim()  || ''}
-              img={record.img               || ''}
-              spouseName={record.Spouse_name || record.SpouseName || ''}
-              spouseImg={record.SpousePhoto ? `https://rotaryindia.org/Documents/directory/${record.SpousePhoto}` : ''}
-            />
-          </div>
-        ))}
+        {records.map((record, idx) => {
+          const rid = (record.RotaryID || '').trim();
+          return (
+            <div key={idx} data-pdf-card={String(idx)}>
+              <MemberCard
+                index={idx}
+                designation={resolveDesignation(record.DistrictDesignation || '')}
+                name={record.name             || ''}
+                club={record.ClubName         || ''}
+                classification={record.Keywords?.trim() || ''}
+                mobile={record.MobileNumber   || ''}
+                blood={record.Bloodgrp        || ''}
+                email={record.MailID          || ''}
+                address={record.Address?.trim() || ''}
+                dob={formatDayMonth(record.DOB)}
+                dow={formatDayMonth(record.DOA || record.DOW)}
+                rid={rid}
+                img={record.img || record.imgPath || record.profilephoto || ''}
+                spouseName={record.SpouseName || record.Spouse_Name || ''}
+                spouseImg={record.SpousePhoto || record.Spouse_Photo || ''}
+              />
+            </div>
+          );
+        })}
       </>,
     );
   });
@@ -152,12 +160,12 @@ async function generateCommitteePDF(
   await proxyAllImages(container);
 
   const cardEls = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-card]'));
-  const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
+  const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [142, 215] });
   const total   = cardEls.length;
   let pageIndex = 0;
 
   for (let i = 0; i < cardEls.length; i += CARDS_PER_PAGE) {
-    if (i > 0) pdf.addPage('b5', 'portrait');
+    if (i > 0) pdf.addPage([142, 215], 'portrait');
     const batch    = cardEls.slice(i, i + CARDS_PER_PAGE);
     const canvases: (HTMLCanvasElement | null)[] = [];
 
@@ -176,18 +184,141 @@ async function generateCommitteePDF(
     pageIndex++;
     pdf.addImage(makePage(canvases, bgBmp), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
 
-    // Committee name heading
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(11);
-    pdf.setTextColor(48, 72, 144);
-    pdf.text(committeeName, B5_W_MM / 2, TOP_PAD_MM + 4, { align: 'center' });
-    pdf.setTextColor(0, 0, 0);
+    // Committee name heading — only on first page
+    if (i === 0) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(48, 72, 144);
+      pdf.text(committeeName, B5_W_MM / 2, TOP_PAD_MM + 4, { align: 'center' });
+      pdf.setTextColor(0, 0, 0);
+    }
   }
 
   const bytes = pdf.output('arraybuffer') as ArrayBuffer;
   root.unmount();
   document.body.removeChild(container);
   return new Uint8Array(bytes);
+}
+
+// ── Fixed committee order for bulk PDF ────────────────────────────────────────
+const COMMITTEE_ORDER = [
+  'District Secretariat',
+  'District Chief Executive',
+  'District Secretary General',
+  'District Executive Secretary',
+  'Additional District Secretary General',
+  'ADSG',
+  'District Advisory Committee',
+  'District Directory Committee',
+  'Assistant Governor',
+  'Zonal Chairs',
+  'District Learning Team',
+  'District Bylaw Committee',
+  'Strategic Planning Committee',
+  'Grievance Redressal Committee',
+  'District Finance Committee',
+  'District Legal Cell',
+  'GML Committee',
+  'District Sgt-At-Arms',
+  'District Membership Committee',
+  'District Member Attraction Committee',
+  'District Member Retention Committee',
+  'District Member Engagement Committee',
+  'District New Club Development Committee',
+  'District Women Membership Committee',
+  'District Diversity, Equity and Inclusion Committee',
+  'District Foundation Committee',
+  'District Global Grant Committee',
+  'District Annual Fund Sub-Committee',
+  'District Grants Sub-committee',
+  'District Endowment/Major Gifts Sub-committee',
+  'District Fundraising Sub-committee',
+  'District Paul Harris Society Coordinator',
+  'District PolioPlus Sub-committee',
+  'District Scholarship Sub-committee',
+  'District Stewardship Sub-committee',
+  'District Rotary Peace Fellowships Sub-committee',
+  'District Disaster Management Committee',
+  'District Public Image Committee',
+  'District Alumni Committee',
+  'District Youth Service Committee',
+  'District Interact Committee',
+  'District Rotaract Representative',
+  'District Rotaract Committee',
+  'District Community Service',
+  'District RI Convention Promotion Committee',
+  'District Vocational Service',
+  'District Skill Development Committee',
+  'District 7 Areas of Focus Committee',
+  'Peace Building & Conflict Prevention',
+  'Disease Prevention & Treatment',
+  'Dylasis Committee',
+  'Dental Care',
+  'Blood Donation',
+  'Filaria Committee',
+  'Eye Care',
+  'Eye Conclave',
+  'Maternal & Child Health',
+  'Water, Sanitation & Hygienic',
+  'Basic Education & Literacy Committee',
+  'Community Economic  Development',
+  'District Environment Committee',
+  'Organ Donation Committee',
+  'Cancer Prevention & Awareness',
+  'General Health Camps',
+  'Artificial Limbs (LN4)',
+  'Mental Health Awarness',
+  'Rotary Action Group',
+  'Rotary Friendship Exchange',
+  'District RLI (Rotary Leadership Institute)',
+  'PP Fourm',
+  'District Special Aids',
+  'Public Relation Committee',
+  'Print & Electronic Media',
+  'Social Media',
+  'District IT Cell',
+  'Rotary Fellowship Committee',
+  'Inter District Greetings Committee',
+  'Intra District Greetings Committee',
+  'District Election Committee',
+  'District Awards Committee',
+  'RCC (Rotary Community Corp)',
+  'Rotary News Trust',
+  'District Committee for Differently Abled',
+  'District CSR Committee',
+  'Women Empowerment Committee',
+  'Roof-top Gardening Committee',
+  'Rain Water Harvesting',
+  'International Service',
+  'Youth Protection Officer',
+  'District RYLA',
+  'District Picnic Committee',
+  'District Women-Car Rally',
+  'District Sports Committee',
+  'District Cricket Tournament',
+  'Rotary Day Celebration Committee',
+  'Rotary Litt-Fest',
+  'Rotary Got Talent (RGT)',
+  'District Cultural Committee',
+  'Road Safety Committee',
+  'Women Day Celebration Committee',
+  'Career Counselling Committee',
+  'District Wealth Creation Committee',
+  'District Ethics Committee',
+  'District RI Presidential Message Promotion Committee',
+  'District Coordination & OCV Committee',
+  'District Events',
+  'District PELS & SELS',
+  'AGLS & DTLS',
+  'Club Leadership Learning Seminar',
+  'District Conference',
+  'District Program & Events Committee',
+];
+
+function getCommitteeOrder(name: string): number {
+  const n = name.trim().toLowerCase();
+  const idx = COMMITTEE_ORDER.findIndex(c => n.includes(c.trim().toLowerCase()) || c.trim().toLowerCase().includes(n));
+  return idx === -1 ? COMMITTEE_ORDER.length : idx;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -206,17 +337,14 @@ export default function BulkCommitteePDFButton({ committees }: { committees: Com
         import('jszip'),
       ]);
 
-      // ── 1. Fetch all committee data in parallel ──
+      // ── 1. Sort committees in fixed order, then fetch data ──
+      const sorted = [...committees].sort((a, b) => getCommitteeOrder(a.name) - getCommitteeOrder(b.name));
+
       setStatus('Fetching committee data…');
       const allData = await Promise.all(
-        committees.map(c =>
+        sorted.map(c =>
           fetch(`/api/committee-details/${c.id}`)
             .then(r => r.json())
-            .then((records: any[]) =>
-              [...records].sort((a, b) =>
-                (a.ClubName || '').toLowerCase().localeCompare((b.ClubName || '').toLowerCase())
-              )
-            )
             .catch(() => [] as any[])
         )
       );
@@ -231,18 +359,18 @@ export default function BulkCommitteePDFButton({ committees }: { committees: Com
       // ── 3. Generate one PDF per committee, add to zip ──
       const zip = new JSZip.default();
 
-      for (let i = 0; i < committees.length; i++) {
+      for (let i = 0; i < sorted.length; i++) {
         const records = allData[i];
         if (records.length === 0) continue;
         await new Promise(r => setTimeout(r, 0)); // yield to browser between committees
 
         const pdfBytes = await generateCommitteePDF(
           records, html2canvas, jsPDF, rightBmp, leftBmp,
-          setStatus, committees[i].name,
-          committees.length, i,
+          setStatus, sorted[i].name,
+          sorted.length, i,
         );
 
-        const filename = `${committees[i].name.replace(/\s+/g, '-').toLowerCase()}-2025-26.pdf`;
+        const filename = `${String(i + 1).padStart(3, '0')}-${sorted[i].name.replace(/\s+/g, '-').toLowerCase()}-2025-26.pdf`;
         zip.file(filename, pdfBytes);
       }
 

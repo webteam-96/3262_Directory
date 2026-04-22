@@ -71,25 +71,29 @@ export default async function ExecutiveCommitteePage() {
         <div className="auto-container">
           <div className="row clearfix align-items-start justify-content-center">
             {members.length === 0 && <p>No members found.</p>}
-            {members.map((member: any, index: number) => (
-              <div key={index} className="col-xxl-6 col-xl-6 col-md-6 col-12">
-                <MemberCard
-                  designation={member.DistrictDesignation || 'Member'}
-                  name={member.name          || ''}
-                  club={member.ClubName      || ''}
-                  classification={member.classification || ''}
-                  mobile={member.MobileNumber  || ''}
-                  blood={member.Bloodgrp      || ''}
-                  email={member.MailID        || ''}
-                  address={member.Address       || ''}
-                  dob={member.DOB           || ''}
-                  rid={member.RotaryID      || ''}
-                  img={member.img}
-                  headerColor={HEADER_COLORS[index % 4]}
-                  bodyColor={BODY_COLORS[index % 4]}
-                />
-              </div>
-            ))}
+            {members.map((member: any, index: number) => {
+              const rid = (member.RotaryID || '').trim();
+              return (
+                <div key={index} className="col-xxl-6 col-xl-6 col-md-6 col-12">
+                  <MemberCard
+                    index={index}
+                    designation={member.DistrictDesignation || 'Member'}
+                    name={member.name          || ''}
+                    club={member.ClubName      || ''}
+                    classification={member.classification || ''}
+                    mobile={member.MobileNumber || ''}
+                    blood={member.Bloodgrp      || ''}
+                    email={member.MailID        || ''}
+                    address={member.Address     || ''}
+                    dob={member.DOB             || ''}
+                    rid={rid}
+                    img={member.img}
+                    headerColor={HEADER_COLORS[index % 4]}
+                    bodyColor={BODY_COLORS[index % 4]}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

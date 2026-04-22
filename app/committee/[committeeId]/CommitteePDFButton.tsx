@@ -2,22 +2,22 @@
 
 import { useState } from 'react';
 
-// B5 portrait: 176 × 250 mm
-const B5_W_MM     = 176;
-const B5_H_MM     = 250;
+// Custom portrait: 142 × 215 mm
+const B5_W_MM     = 142;
+const B5_H_MM     = 215;
 const PX20_MM     = 20 * 25.4 / 96;
-const TOP_PAD_MM  = (64.8  / 708.66) * 250 + PX20_MM;
-const BOT_PAD_MM  = ((708.66 - 675) / 708.66) * 250 + PX20_MM;
+const TOP_PAD_MM  = (64.8  / 708.66) * 215 + PX20_MM;
+const BOT_PAD_MM  = ((708.66 - 675) / 708.66) * 215 + PX20_MM;
 const SIDE_PAD_MM = PX20_MM;
 const CONT_W_MM   = B5_W_MM - SIDE_PAD_MM * 2;
-const HEADING_H_MM   = 4;   // space reserved for committee name heading
+const HEADING_H_MM   = 6;   // space reserved for committee name heading
 const CONT_H_MM   = B5_H_MM - TOP_PAD_MM - BOT_PAD_MM - HEADING_H_MM;
 const CARDS_PER_PAGE = 5;
 const GAP_MM      = 2;
 const CARD_SLOT_H_MM = (CONT_H_MM - GAP_MM * (CARDS_PER_PAGE - 1)) / CARDS_PER_PAGE;
 
-// 8 px/mm for sharp output
-const PX_PER_MM = 8;
+// 16 px/mm (~406 DPI) for high-quality print output
+const PX_PER_MM = 16;
 const BG_W      = Math.round(B5_W_MM * PX_PER_MM);
 const BG_H      = Math.round(B5_H_MM * PX_PER_MM);
 
@@ -74,14 +74,18 @@ function makePage(canvases: (HTMLCanvasElement | null)[], bgBmp: ImageBitmap): s
 
   canvases.forEach((c, i) => {
     if (!c) return;
-    const dy = yStart + i * (slotHpx + gapPx);
-    // Fill full content width, preserve aspect ratio — never clip the source
-    const dw = contentW;
-    const dh = Math.round(c.height * contentW / c.width);
-    ctx.drawImage(c, 0, 0, c.width, c.height, xPx, dy, dw, dh);
+    const slotTop = yStart + i * (slotHpx + gapPx);
+    // Fit card into its slot (width AND height) so a tall card shrinks
+    // instead of bleeding into the next slot's space.
+    const scale = Math.min(contentW / c.width, slotHpx / c.height);
+    const dw = Math.round(c.width  * scale);
+    const dh = Math.round(c.height * scale);
+    const dx = xPx + Math.round((contentW - dw) / 2);
+    const dy = slotTop + Math.round((slotHpx - dh) / 2);
+    ctx.drawImage(c, 0, 0, c.width, c.height, dx, dy, dw, dh);
   });
 
-  return pg.toDataURL('image/jpeg', 0.88);
+  return pg.toDataURL('image/jpeg', 0.95);
 }
 
 interface Props { title: string; filename: string; }
@@ -118,12 +122,12 @@ export default function CommitteePDFButton({ title, filename }: Props) {
         svgToPngDataUrl('/assets/border-left.svg',  BG_W, BG_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
       ]);
 
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [142, 215] });
       const total = cardEls.length;
       let pageIndex = 0;
 
       for (let i = 0; i < cardEls.length; i += CARDS_PER_PAGE) {
-        if (i > 0) pdf.addPage('b5', 'portrait');
+        if (i > 0) pdf.addPage([142, 215], 'portrait');
 
         const batch    = cardEls.slice(i, i + CARDS_PER_PAGE);
         const canvases: (HTMLCanvasElement | null)[] = [];
@@ -149,12 +153,14 @@ export default function CommitteePDFButton({ title, filename }: Props) {
         setStatus(`Building page ${Math.floor(i / CARDS_PER_PAGE) + 1}…`);
         pdf.addImage(makePage(canvases, bgBmp), 'JPEG', 0, 0, B5_W_MM, B5_H_MM);
 
-        // Committee name heading — sits in the reserved zone below the decorative border
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(11);
-        pdf.setTextColor(48, 72, 144); // #304890 navy
-        pdf.text(title, B5_W_MM / 2, TOP_PAD_MM + 4, { align: 'center' });
-        pdf.setTextColor(0, 0, 0);
+        // Committee name heading — only on first page
+        if (i === 0) {
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(15);
+          pdf.setTextColor(48, 72, 144); // #304890 navy
+          pdf.text(title, B5_W_MM / 2, TOP_PAD_MM + 2, { align: 'center' });
+          pdf.setTextColor(0, 0, 0);
+        }
       }
 
       pdf.save(filename);

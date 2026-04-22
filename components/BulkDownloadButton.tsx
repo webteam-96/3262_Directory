@@ -4,20 +4,20 @@ import { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import ClubDirectoryLayout from '@/app/clubs/[groupId]/ClubDirectoryLayout';
 
-// B5 portrait: 176 × 250 mm
-const B5_W_MM     = 176;
-const B5_H_MM     = 250;
+// Custom portrait: 142 × 215 mm
+const B5_W_MM     = 142;
+const B5_H_MM     = 215;
 const PX20_MM     = 20 * 25.4 / 96; // 20px → ~5.29 mm
 
 // SVG border measurements (viewBox 498.9 × 708.66)
-const TOP_PAD_MM  = 64.8  / 708.66 * 250 + PX20_MM; // ≈ 28.2 mm
-const BOT_PAD_MM  = (708.66 - 675) / 708.66 * 250 + PX20_MM; // ≈ 17.2 mm
+const TOP_PAD_MM  = 64.8  / 708.66 * 215 + PX20_MM; // ≈ 24.9 mm
+const BOT_PAD_MM  = (708.66 - 675) / 708.66 * 215 + PX20_MM; // ≈ 15.5 mm
 const SIDE_PAD_MM = PX20_MM; // ≈ 5.3 mm
 
 const CONT_W = B5_W_MM - SIDE_PAD_MM * 2;
 const CONT_H = B5_H_MM - TOP_PAD_MM  - BOT_PAD_MM;
 
-const OUT_DPI       = 150;
+const OUT_DPI       = 400;
 const OUT_PX_PER_MM = OUT_DPI / 25.4;
 const OUT_W         = Math.round(B5_W_MM * OUT_PX_PER_MM);
 const OUT_H         = Math.round(B5_H_MM * OUT_PX_PER_MM);
@@ -147,13 +147,13 @@ export default function BulkDownloadButton({ clubs }: { clubs: any[] }) {
           ctx.drawImage(bgBmp, 0, 0, OUT_W, OUT_H);
           ctx.drawImage(contentC, 0, 0, contentC.width, contentHPx,
             outX, outY, outW, Math.round(contentHPx * capToOut));
-          return pg.toDataURL('image/jpeg', 0.88);
+          return pg.toDataURL('image/jpeg', 0.95);
         };
 
         const rows1Max    = Math.max(1, Math.floor((pageHPx - tR) / rowHpx));
         const rowsPerPage = Math.max(1, Math.floor((pageHPx - hdrH) / rowHpx));
 
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [142, 215] });
         let pageIndex = 0;
 
         // Page 1
@@ -169,7 +169,7 @@ export default function BulkDownloadButton({ clubs }: { clubs: any[] }) {
         const totalRows = Math.floor((rendered.height - tR) / rowHpx);
 
         while (nextRow < totalRows) {
-          pdf.addPage('b5', 'portrait');
+          pdf.addPage([142, 215], 'portrait');
           const rowsThisPage = Math.min(rowsPerPage, totalRows - nextRow);
           const rowsH = rowsThisPage * rowHpx;
           const comp  = document.createElement('canvas');

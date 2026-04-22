@@ -89,7 +89,7 @@ function InfoCell({
       alignItems: 'flex-start',
       justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
       padding: '6px 10px',
-      fontSize: 18,
+      fontSize: 26,
       fontWeight: 400,
       color: '#000',
       fontFamily: FONT,
@@ -192,11 +192,11 @@ function DistrictCard({
 
         {/* ── Governor names + dots in one line ── */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14, gap: 8 }}>
-          <div style={{ flex: 1, fontWeight: 700, fontSize: 22, color: '#000', fontFamily: FONT }}>
+          <div style={{ flex: 1, fontWeight: 700, fontSize: 26, color: '#000', fontFamily: FONT }}>
             {hasLeft ? cleanText(dgLeft.member_name) : '—'}
           </div>
           <DotStrip />
-          <div style={{ flex: 1, fontWeight: 700, fontSize: 22, color: '#000', fontFamily: FONT, textAlign: 'right' }}>
+          <div style={{ flex: 1, fontWeight: 700, fontSize: 26, color: '#000', fontFamily: FONT, textAlign: 'right' }}>
             {hasRight ? cleanText(dgRight.member_name) : '—'}
           </div>
         </div>
@@ -255,11 +255,11 @@ function DistrictCard({
 
         {/* ── Spouse names + dots in one line ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ flex: 1, fontSize: 22, fontWeight: 500, color: '#000', fontFamily: FONT }}>
+          <div style={{ flex: 1, fontSize: 26, fontWeight: 500, color: '#000', fontFamily: FONT }}>
             {hasLeft ? cleanText(dgLeft.Spouse_Name) : ''}
           </div>
           <DotStrip />
-          <div style={{ flex: 1, fontSize: 22, fontWeight: 500, color: '#000', fontFamily: FONT, textAlign: 'right' }}>
+          <div style={{ flex: 1, fontSize: 26, fontWeight: 500, color: '#000', fontFamily: FONT, textAlign: 'right' }}>
             {hasRight ? cleanText(dgRight.Spouse_Name) : ''}
           </div>
         </div>

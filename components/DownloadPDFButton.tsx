@@ -25,7 +25,7 @@ interface Props {
 export default function DownloadPDFButton({ members, title, filename }: Props) {
   const handleDownload = async () => {
     const { jsPDF } = await import('jspdf');
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [142, 215] });
 
     const pageW = doc.internal.pageSize.getWidth();
     const margin = 14;

@@ -2,16 +2,16 @@
 
 import { useState } from 'react';
 
-// B5 portrait: 176 × 250 mm
-const B5_W_MM = 176;
-const B5_H_MM = 250;
+// Custom portrait: 142 × 215 mm
+const B5_W_MM = 142;
+const B5_H_MM = 215;
 const PX20_MM = 20 * 25.4 / 96; // ≈ 5.29 mm
 
 // SVG viewBox: 498.9 × 708.66
-// Top border elements end at y ≈ 64.8  → 64.8/708.66 * 250 ≈ 22.9 mm
-// Bottom border starts at y ≈ 675      → (708.66-675)/708.66 * 250 ≈ 11.9 mm
-const TOP_PAD_MM  = (64.8  / 708.66) * 250 + PX20_MM;         // ≈ 28.2 mm
-const BOT_PAD_MM  = ((708.66 - 675) / 708.66) * 250 + PX20_MM; // ≈ 17.2 mm
+// Top border elements end at y ≈ 64.8  → 64.8/708.66 * 215 ≈ 19.7 mm
+// Bottom border starts at y ≈ 675      → (708.66-675)/708.66 * 215 ≈ 10.2 mm
+const TOP_PAD_MM  = (64.8  / 708.66) * 215 + PX20_MM;         // ≈ 24.9 mm
+const BOT_PAD_MM  = ((708.66 - 675) / 708.66) * 215 + PX20_MM; // ≈ 15.5 mm
 const SIDE_PAD_MM = PX20_MM;                                     // ≈ 5.3 mm
 
 const CONT_W = B5_W_MM - SIDE_PAD_MM * 2;         // ≈ 165.4 mm
@@ -78,10 +78,10 @@ export default function DownloadPDFButton() {
       );
       if (cardEls.length === 0) { setLoading(false); return; }
 
-      // Rasterise SVG at high res (8 px/mm → sharp at B5)
-      const BG_W      = Math.round(B5_W_MM * 8);  // 1408 px
-      const BG_H      = Math.round(B5_H_MM * 8);  // 2000 px
-      const pxPerMM   = BG_W / B5_W_MM;           // 8 px/mm
+      // Rasterise SVG at high res (16 px/mm → ~406 DPI, high-quality print)
+      const BG_W      = Math.round(B5_W_MM * 16);
+      const BG_H      = Math.round(B5_H_MM * 16);
+      const pxPerMM   = BG_W / B5_W_MM;           // 16 px/mm
 
       const [rightBmp, leftBmp] = await Promise.all([
         svgToPngDataUrl('/assets/border-right.svg', BG_W, BG_H).then(d => fetch(d).then(r => r.blob())).then(b => createImageBitmap(b)),
@@ -139,11 +139,11 @@ export default function DownloadPDFButton() {
       };
 
       const SCALE = 2;
-      const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
+      const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [142, 215] });
       let pageIndex = 0;
 
       for (let i = 0; i < cardEls.length; i += 2) {
-        if (i > 0) pdf.addPage('b5', 'portrait');
+        if (i > 0) pdf.addPage([142, 215], 'portrait');
 
         // Capture card 1
         const restore1 = await proxyImages(cardEls[i]);

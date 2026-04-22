@@ -40,9 +40,7 @@ export default async function CommitteeDetailsPage({
   let records: any[] = [];
   try {
     const raw = await fetchCommitteeDetails(committeeId);
-records = [...raw].sort((a: any, b: any) =>
-      (a.ClubName || '').toLowerCase().localeCompare((b.ClubName || '').toLowerCase())
-    );
+    records = raw;
   } catch {
     // fail silently
   }
@@ -74,23 +72,23 @@ records = [...raw].sort((a: any, b: any) =>
         <div className="auto-container" id="committee-canvas">
           {records.length === 0 && <p className="text-center">No members found.</p>}
           {records.map((record: any, index: number) => (
-            <MemberCard
-              key={index}
+              <MemberCard
+                key={index}
                 index={index}
                 designation={resolveDesignation(record.DistrictDesignation || '')}
-                name={record.name           || ''}
-                club={record.ClubName       || ''}
+                name={record.name || ''}
+                club={record.ClubName || ''}
                 classification={record.Keywords?.trim() || ''}
-                mobile={record.MobileNumber   || ''}
-                blood={record.Bloodgrp        || ''}
-                email={record.MailID          || ''}
+                mobile={record.MobileNumber || ''}
+                blood={record.Bloodgrp || ''}
+                email={record.MailID || ''}
                 address={record.Address?.trim() || ''}
-                dob={formatDayMonth(record.DOB)}
-                dow={formatDayMonth(record.DOA || record.DOW)}
-                rid={record.RotaryID?.trim()  || ''}
-                img={record.img               || ''}
-                spouseName={record.Spouse_name || record.SpouseName || ''}
-                spouseImg={record.SpousePhoto ? `https://rotaryindia.org/Documents/directory/${record.SpousePhoto}` : ''}
+                dob={formatDayMonth(record.DOB) || ''}
+                dow={formatDayMonth(record.DOA || record.DOW) || ''}
+                rid={(record.RotaryID || '').trim()}
+                img={record.img || record.imgPath || record.profilephoto || ''}
+                spouseName={record.SpouseName || record.Spouse_Name || ''}
+                spouseImg={record.SpousePhoto || record.Spouse_Photo || ''}
               />
           ))}
         </div>

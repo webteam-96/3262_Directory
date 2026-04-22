@@ -1,6 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
+import focalPoints from '@/lib/photo-focal-points.json';
+
+const FOCAL: Record<string, { x: number; y: number }> = focalPoints as Record<string, { x: number; y: number }>;
+const DEFAULT_POS = '50% 25%';
+
+function objectPositionFor(src?: string): string {
+  if (!src) return DEFAULT_POS;
+  const f = FOCAL[src];
+  return f ? `${f.x}% ${f.y}%` : DEFAULT_POS;
+}
 
 const GOLD = '#FEBD1F';
 const BLUE = '#17458F';
@@ -27,6 +37,34 @@ function fmtDOB(s?: string): string {
   return clean(s) || '';
 }
 
+// "02/21/2025" (MM/DD/YYYY) or "21/02/2025" (DD/MM/YYYY) → "21-Feb-2025"
+function fmtJoinDate(s?: string): string {
+  const cleaned = clean(s);
+  if (!cleaned) return '';
+  const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const parts = cleaned.split(/[\/\-.]/);
+  if (parts.length === 3) {
+    let a = parseInt(parts[0], 10);
+    let b = parseInt(parts[1], 10);
+    const y = parts[2];
+    let day: number, mon: number;
+    if (a > 12 && b <= 12) {
+      // first part can't be a month → DD/MM/YYYY
+      day = a; mon = b;
+    } else if (b > 12 && a <= 12) {
+      // second part can't be a month → MM/DD/YYYY
+      day = b; mon = a;
+    } else {
+      // ambiguous (both <=12) — assume MM/DD/YYYY since the API returns that
+      day = b; mon = a;
+    }
+    if (day >= 1 && day <= 31 && mon >= 1 && mon <= 12) {
+      return `${String(day).padStart(2, '0')}-${months[mon]}-${y}`;
+    }
+  }
+  return cleaned;
+}
+
 function fmtMobile(m: any): string {
   if (!m) return '';
   const code = clean(m.country_code);
@@ -46,12 +84,15 @@ function photoSrc(src?: string): string {
 }
 
 function PhotoImg({ src }: { src?: string }) {
+  const realSrc = photoSrc(src);
+  const objectPosition = objectPositionFor(src);
   return (
     <img
-      src={photoSrc(src)}
+      src={realSrc}
       width={120}
       height={120}
-      style={{ width: 120, height: 120, objectFit: 'cover', display: 'block', borderRadius: 4 }}
+      suppressHydrationWarning
+      style={{ width: 120, height: 120, objectFit: 'cover', objectPosition, display: 'block', borderRadius: 4 }}
       alt=""
     />
   );
@@ -95,17 +136,19 @@ export default function ClubDirectoryLayout({
      TABLE_H   : table header top
      TABLE_R   : first data row top                                        */
   const META_TOP  = 58;
-  const DIVIDER   = META_TOP + 3 * 28 + 20;   // 162
-  const PRES_TOP  = DIVIDER + 30;              // 192  — president title
-  const P_OFF     = PRES_TOP - 104;            // 88
-  // Secretary placed 30px + 80px margin below the bottom of the president block
-  const SEC_TOP   = PRES_TOP + (205 - 104) + 110; // 192 + 101 + 110 = 403
+  const DIVIDER   = META_TOP + 3 * 36 + 20;   // 186 (meta rows widened for 26px font)
+  const PRES_TOP  = DIVIDER + 30;              // 216  — president title
+  const P_OFF     = PRES_TOP - 104;            // 112
+  // Secretary placed 110px below the bottom of the president block
+  // (pres rows now span 104 → 266, block bottom ≈ 298 with line-height)
+  const SEC_TOP   = PRES_TOP + (298 - 104) + 110; // PRES_TOP + 304
   const S_V       = SEC_TOP - 214;             // offset for sec text (title was at 214)
-  const S_P_OFF   = SEC_TOP - 104;             // offset for sec photo block (photo was at 117/122)
-  const TABLE_H   = SEC_TOP + (324 - 214) + 80; // 80px margin after secretary card
-  const TABLE_R   = SEC_TOP + (357 - 214) + 80;
+  const S_P_OFF   = SEC_TOP - 104;             // offset for sec photo block
+  // Sec rows span 214 → 376 + line-height ≈ 408
+  const TABLE_H   = SEC_TOP + (408 - 214) + 80; // SEC_TOP + 274
+  const TABLE_R   = SEC_TOP + (440 - 214) + 80; // SEC_TOP + 306
 
-  const canvasH = Math.max(900, TABLE_R + members.length * 70 + 20);
+  const canvasH = Math.max(900, TABLE_R + members.length * 100 + 20);
 
   const suffix = clean(club.Club_Name)
     .replace(/^rotary\s+club\s+of\s+/i, '')
@@ -114,14 +157,14 @@ export default function ClubDirectoryLayout({
   const cell = (left: number, width: number, top: number, bg: string) => ({
     position: 'absolute' as const,
     left, top, width,
-    height: 64,
+    height: 95,
     background: bg,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     textAlign: 'center' as const,
-    fontSize: 16,
-    lineHeight: '22px',
+    fontSize: 26,
+    lineHeight: '32px',
     padding: '8px 14px',
     boxSizing: 'border-box' as const,
     wordBreak: 'break-word' as const,
@@ -138,7 +181,7 @@ export default function ClubDirectoryLayout({
         id="club-directory-canvas"
         data-table-h={TABLE_H}
         data-table-r={TABLE_R}
-        data-row-h={70}
+        data-row-h={100}
         style={{
           width: 1200,
           height: canvasH,
@@ -154,7 +197,7 @@ export default function ClubDirectoryLayout({
         <div style={{
           position: 'absolute', left: 0, top: 12, width: 1200,
           textAlign: 'center',
-          color: '#304890', fontSize: 28,
+          color: '#304890', fontSize: 32,
           fontFamily: 'Inter, sans-serif', fontWeight: 900,
           whiteSpace: 'nowrap',
         }}>
@@ -164,7 +207,7 @@ export default function ClubDirectoryLayout({
         {/* ── CLUB META (3 rows, each flex space-between) ── */}
         <div style={{
           position: 'absolute', left: 47, top: META_TOP, width: 1200 - 94,
-          fontSize: 18, lineHeight: '28px',
+          fontSize: 26, lineHeight: '36px',
         }}>
           {/* Row 1: Club ID · Charter Date · AG */}
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -212,25 +255,38 @@ export default function ClubDirectoryLayout({
         <Dot left={274} top={232 + P_OFF} color={BLUE} />
         <Dot left={274} top={208 + P_OFF} color={BLUE} />
 
-        <div style={{ position: 'absolute', left: 310, top: 104 + P_OFF, width: 390, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>
-          President: {clean(president?.member_name)}
-        </div>
+        {(() => {
+          const pId = clean(president?.RotaryID);
+          const pDob = fmtDOB(president?.DOB);
+          const pDoa = fmtDOB(president?.DOA);
+          const pCl = clean(president?.Classification) || clean(president?.Designation);
+          const pMob = fmtMobile(president);
+          const pEmail = clean(president?.MailID);
+          const pAddr = clean(president?.Address);
+          const pSpouse = clean(president?.Spouse_name);
+          return (<>
+            <div style={{ position: 'absolute', left: 310, top: 104 + P_OFF, width: 390, fontSize: 26, fontWeight: 700, textAlign: 'center' }}>
+              President: {clean(president?.member_name)}
+            </div>
+            {pId && <div style={{ position: 'absolute', left: 310, top: 140 + P_OFF, fontSize: 26 }}><b>ID:</b> {pId}</div>}
+            {pDob && <div style={{ position: 'absolute', left: 490, top: 140 + P_OFF, fontSize: 26 }}><b>DOB:</b> {pDob}</div>}
+            {pDoa && <div style={{ position: 'absolute', left: 310, top: 172 + P_OFF, fontSize: 26 }}><b>DOA:</b> {pDoa}</div>}
+            {pCl && <div style={{ position: 'absolute', left: 310, top: 204 + P_OFF, fontSize: 26, maxWidth: 380, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><b>Cl:</b> {pCl}</div>}
+            {pMob && <div style={{ position: 'absolute', left: 310, top: 236 + P_OFF, fontSize: 26 }}><b>Mobile:</b> {pMob}</div>}
 
-        <div style={{ position: 'absolute', left: 310, top: 130 + P_OFF, fontSize: 18 }}><b>ID:</b> {clean(president?.RotaryID)}</div>
-        <div style={{ position: 'absolute', left: 490, top: 130 + P_OFF, fontSize: 18 }}><b>DOB:</b> {fmtDOB(president?.DOB)}</div>
-        <div style={{ position: 'absolute', left: 310, top: 156 + P_OFF, fontSize: 18 }}><b>DOA:</b> {fmtDOB(president?.DOA)}</div>
-        <div style={{ position: 'absolute', left: 310, top: 182 + P_OFF, fontSize: 18 }}><b>Cl:</b> {clean(president?.Classification) || clean(president?.Designation)}</div>
-        <div style={{ position: 'absolute', left: 310, top: 208 + P_OFF, fontSize: 18 }}><b>Mobile:</b> {fmtMobile(president)}</div>
-        <div style={{ position: 'absolute', left: 310, top: 234 + P_OFF, fontSize: 18 }}><b>Email:</b> {clean(president?.MailID)}</div>
+            {(pEmail || pAddr || pSpouse) && <div style={{ position: 'absolute', left: 700, top: 140 + P_OFF, width: 1, height: 158, background: 'rgba(0,0,0,0.50)' }} />}
 
-        <div style={{ position: 'absolute', left: 700, top: 130 + P_OFF, width: 1, height: 122, background: 'rgba(0,0,0,0.50)' }} />
-
-        <div style={{ position: 'absolute', left: 712, top: 130 + P_OFF, width: 260, fontSize: 18, lineHeight: '24px' }}>
-          <b>Add:</b> {clean(president?.Address)}
-        </div>
-        <div style={{ position: 'absolute', left: 712, top: 234 + P_OFF, width: 260, fontSize: 18 }}>
-          <b>Spouse:</b> {clean(president?.Spouse_name) || ''}
-        </div>
+            {pEmail && <div style={{ position: 'absolute', left: 712, top: 140 + P_OFF, fontSize: 26 }}>
+              <b>Email:</b> {pEmail}
+            </div>}
+            {pAddr && <div style={{ position: 'absolute', left: 712, top: 172 + P_OFF, fontSize: 26, lineHeight: '32px' }}>
+              <b>Add:</b> {pAddr}
+            </div>}
+            {pSpouse && <div style={{ position: 'absolute', left: 712, top: 268 + P_OFF, fontSize: 26 }}>
+              <b>Spouse:</b> {pSpouse}
+            </div>}
+          </>);
+        })()}
 
         {/* ══════════════════════════════════════════
             SECRETARY — full width, below president, photos RIGHT
@@ -256,25 +312,38 @@ export default function ClubDirectoryLayout({
         <Dot left={SP + 0}   top={232 + S_P_OFF} color={BLUE} />
         <Dot left={SP + 0}   top={208 + S_P_OFF} color={BLUE} />
 
-        <div style={{ position: 'absolute', left: 26, top: 214 + S_V, width: 424, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>
-          Secretary: {clean(secretary?.member_name)}
-        </div>
+        {(() => {
+          const sId = clean(secretary?.RotaryID);
+          const sDob = fmtDOB(secretary?.DOB);
+          const sDoa = fmtDOB(secretary?.DOA);
+          const sCl = clean(secretary?.Classification) || clean(secretary?.Designation);
+          const sMob = fmtMobile(secretary);
+          const sEmail = clean(secretary?.MailID);
+          const sAddr = clean(secretary?.Address);
+          const sSpouse = clean(secretary?.Spouse_name);
+          return (<>
+            <div style={{ position: 'absolute', left: 26, top: 214 + S_V, width: 424, fontSize: 26, fontWeight: 700, textAlign: 'center' }}>
+              Secretary: {clean(secretary?.member_name)}
+            </div>
+            {sId && <div style={{ position: 'absolute', left: 26,  top: 250 + S_V, fontSize: 26 }}><b>ID:</b> {sId}</div>}
+            {sDob && <div style={{ position: 'absolute', left: 200, top: 250 + S_V, fontSize: 26 }}><b>DOB:</b> {sDob}</div>}
+            {sDoa && <div style={{ position: 'absolute', left: 26,  top: 282 + S_V, fontSize: 26 }}><b>DOA:</b> {sDoa}</div>}
+            {sCl && <div style={{ position: 'absolute', left: 26,  top: 314 + S_V, fontSize: 26, maxWidth: 414, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><b>Cl:</b> {sCl}</div>}
+            {sMob && <div style={{ position: 'absolute', left: 26,  top: 346 + S_V, fontSize: 26 }}><b>Mobile:</b> {sMob}</div>}
 
-        <div style={{ position: 'absolute', left: 26,  top: 240 + S_V, fontSize: 18 }}><b>ID:</b> {clean(secretary?.RotaryID)}</div>
-        <div style={{ position: 'absolute', left: 200, top: 240 + S_V, fontSize: 18 }}><b>DOB:</b> {fmtDOB(secretary?.DOB)}</div>
-        <div style={{ position: 'absolute', left: 26,  top: 266 + S_V, fontSize: 18 }}><b>DOA:</b> {fmtDOB(secretary?.DOA)}</div>
-        <div style={{ position: 'absolute', left: 26,  top: 292 + S_V, fontSize: 18 }}><b>Cl:</b> {clean(secretary?.Classification) || clean(secretary?.Designation)}</div>
-        <div style={{ position: 'absolute', left: 26,  top: 318 + S_V, fontSize: 18 }}><b>Mobile:</b> {fmtMobile(secretary)}</div>
-        <div style={{ position: 'absolute', left: 26,  top: 344 + S_V, fontSize: 18 }}><b>Email:</b> {clean(secretary?.MailID)}</div>
+            {(sEmail || sAddr || sSpouse) && <div style={{ position: 'absolute', left: 450, top: 250 + S_V, width: 1, height: 158, background: 'rgba(0,0,0,0.50)' }} />}
 
-        <div style={{ position: 'absolute', left: 450, top: 240 + S_V, width: 1, height: 122, background: 'rgba(0,0,0,0.50)' }} />
-
-        <div style={{ position: 'absolute', left: 462, top: 240 + S_V, width: 260, fontSize: 18, lineHeight: '24px' }}>
-          <b>Add:</b> {clean(secretary?.Address)}
-        </div>
-        <div style={{ position: 'absolute', left: 462, top: 344 + S_V, width: 260, fontSize: 18 }}>
-          <b>Spouse:</b> {clean(secretary?.Spouse_name) || ''}
-        </div>
+            {sEmail && <div style={{ position: 'absolute', left: 462, top: 250 + S_V, maxWidth: 450, fontSize: 26 }}>
+              <b>Email:</b> {sEmail}
+            </div>}
+            {sAddr && <div style={{ position: 'absolute', left: 462, top: 282 + S_V, maxWidth: 450, fontSize: 26, lineHeight: '32px' }}>
+              <b>Add:</b> {sAddr}
+            </div>}
+            {sSpouse && <div style={{ position: 'absolute', left: 462, top: 378 + S_V, maxWidth: 450, fontSize: 26 }}>
+              <b>Spouse:</b> {sSpouse}
+            </div>}
+          </>);
+        })()}
 
         {/* ── TABLE HEADERS (full 1200px) ── */}
         {COLS.map((col) => (
@@ -284,7 +353,7 @@ export default function ClubDirectoryLayout({
             width: col.width, height: 30,
             background: '#304890',
             borderRadius: '10px 10px 0 0',
-            color: 'white', fontSize: 16,
+            color: 'white', fontSize: 18, fontWeight: 800,
             display: 'flex', alignItems: 'center',
             justifyContent: 'center', textAlign: 'center',
             padding: '0 8px', boxSizing: 'border-box',
@@ -295,12 +364,14 @@ export default function ClubDirectoryLayout({
 
         {/* ── TABLE ROWS ── */}
         {members.map((m: any, i: number) => {
-          const top = TABLE_R + i * 70;
+          const top = TABLE_R + i * 100;
           const bg  = i % 2 === 0 ? 'rgba(254,189,31,0.20)' : 'rgba(48,72,144,0.20)';
+          const joinDate = fmtJoinDate(m.RIAdmissionDate || m.RI_AdmissionDate || m.riAdmissionDate);
+          const namePieces = [clean(m.member_name), clean(m.RotaryID), joinDate].filter(Boolean);
           return [
             <div key={`${i}-sno`}  style={cell(COLS[0].left, COLS[0].width, top, bg)}>{i + 1}</div>,
             <div key={`${i}-name`} style={cell(COLS[1].left, COLS[1].width, top, bg)}>
-              {clean(m.member_name)}<br />{clean(m.RotaryID)}<br />{fmtDOB(m.DOA)}
+              {namePieces.join(' / ')}
             </div>,
             <div key={`${i}-cl`}   style={cell(COLS[2].left, COLS[2].width, top, bg)}>
               {clean(m.Classification) || clean(m.Designation)}

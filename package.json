@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "focal-points:setup": "node scripts/download-face-models.mjs",
+    "focal-points": "node scripts/generate-face-focal-points.mjs"
   },
   "dependencies": {
     "@types/qrcode": "^1.5.6",
@@ -16,7 +18,8 @@
     "next": "16.1.6",
     "qrcode": "^1.5.4",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20",

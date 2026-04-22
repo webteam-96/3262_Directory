@@ -2,26 +2,26 @@
 
 import { useState } from 'react';
 
-// B5 portrait: 176 × 250 mm
-const B5_W_MM  = 176;
-const B5_H_MM  = 250;
+// Custom portrait: 142 × 215 mm
+const B5_W_MM  = 142;
+const B5_H_MM  = 215;
 const PX20_MM  = 20 * 25.4 / 96; // 20px → ~5.29 mm
 
 // SVG viewBox is 498.9 × 708.66.
-// Top border elements end at y≈64.8  →  64.8/708.66 * 250 ≈ 22.9 mm
-// Bottom border starts at y≈675      →  (708.66-675)/708.66 * 250 ≈ 11.9 mm
-const TOP_PAD_MM  = 64.8  / 708.66 * 250 + PX20_MM; // ≈ 28.2 mm
-const BOT_PAD_MM  = (708.66 - 675) / 708.66 * 250 + PX20_MM; // ≈ 17.2 mm
+// Top border elements end at y≈64.8  →  64.8/708.66 * 215 ≈ 19.7 mm
+// Bottom border starts at y≈675      →  (708.66-675)/708.66 * 215 ≈ 10.2 mm
+const TOP_PAD_MM  = 64.8  / 708.66 * 215 + PX20_MM; // ≈ 24.9 mm
+const BOT_PAD_MM  = (708.66 - 675) / 708.66 * 215 + PX20_MM; // ≈ 15.5 mm
 const SIDE_PAD_MM = PX20_MM; // ≈ 5.3 mm  (sides have only thin decorations)
 
 const CONT_W = B5_W_MM - SIDE_PAD_MM * 2;         // ~165.4 mm
 const CONT_H = B5_H_MM - TOP_PAD_MM - BOT_PAD_MM; // ~204.6 mm
 
-// Output page canvas at 150 DPI — small enough to encode fast, sharp enough for print
-const OUT_DPI      = 150;
-const OUT_PX_PER_MM = OUT_DPI / 25.4;                          // ~5.91
-const OUT_W        = Math.round(B5_W_MM * OUT_PX_PER_MM);     // ~1039 px
-const OUT_H        = Math.round(B5_H_MM * OUT_PX_PER_MM);     // ~1476 px
+// Output page canvas at 400 DPI — high-quality print output
+const OUT_DPI      = 400;
+const OUT_PX_PER_MM = OUT_DPI / 25.4;                          // ~15.75
+const OUT_W        = Math.round(B5_W_MM * OUT_PX_PER_MM);     // ~2236 px
+const OUT_H        = Math.round(B5_H_MM * OUT_PX_PER_MM);     // ~3386 px
 
 /** Swap cross-origin img srcs → proxy, wait to load, return restore fn */
 async function proxyImages(el: HTMLElement): Promise<() => void> {
@@ -141,7 +141,7 @@ export default function ClubPDFButton({ clubName }: { clubName: string }) {
         ctx.drawImage(bgBmp, 0, 0, OUT_W, OUT_H);
         ctx.drawImage(contentC, 0, 0, contentC.width, contentHPx,
           outX, outY, outW, Math.round(contentHPx * capToOut));
-        return pg.toDataURL('image/jpeg', 0.88);
+        return pg.toDataURL('image/jpeg', 0.95);
       };
 
       // How many rows fit on page 1 (above tR there is the details block)
@@ -149,7 +149,7 @@ export default function ClubPDFButton({ clubName }: { clubName: string }) {
       // Subsequent pages: table header repeated + rows
       const rowsPerPage = Math.max(1, Math.floor((pageHPx - hdrH) / rowHpx));
 
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'b5' });
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [142, 215] });
 
       let pageIndex = 0;
 
@@ -164,7 +164,7 @@ export default function ClubPDFButton({ clubName }: { clubName: string }) {
       const totalRows = Math.floor((canvas.height - tR) / rowHpx);
 
       while (nextRow < totalRows) {
-        pdf.addPage('b5', 'portrait');
+        pdf.addPage([142, 215], 'portrait');
 
         const rowsThisPage = Math.min(rowsPerPage, totalRows - nextRow);
         const rowsH        = rowsThisPage * rowHpx;
