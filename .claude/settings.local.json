@@ -39,7 +39,10 @@
       "Bash(taskkill //F //IM node.exe)",
       "Bash(npx claude-mem *)",
       "Bash(curl -s -X POST https://rotaryindiaapi.rosteronwheels.com/api/District/Get_Clubs_BOD -H 'Content-Type: application/json' -d '{\"groupId\":\"31375\",\"financialyear\":\"2026-2027\"}')",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git reset *)",
+      "Bash(git diff *)"
     ]
   }
 }
