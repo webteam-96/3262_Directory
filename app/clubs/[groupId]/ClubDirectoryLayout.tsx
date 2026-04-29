@@ -163,8 +163,8 @@ export default function ClubDirectoryLayout({
     alignItems: 'center',
     justifyContent: 'center',
     textAlign: 'center' as const,
-    fontSize: 26,
-    lineHeight: '32px',
+    fontSize: 22,
+    lineHeight: '28px',
     padding: '8px 14px',
     boxSizing: 'border-box' as const,
     wordBreak: 'break-word' as const,
@@ -265,7 +265,7 @@ export default function ClubDirectoryLayout({
           const pAddr = clean(president?.Address);
           const pSpouse = clean(president?.Spouse_name);
           return (<>
-            <div style={{ position: 'absolute', left: 310, top: 104 + P_OFF, width: 390, fontSize: 26, fontWeight: 700, textAlign: 'center' }}>
+            <div style={{ position: 'absolute', left: 310, top: 104 + P_OFF, maxWidth: 880, fontSize: 26, fontWeight: 700 }}>
               President: {clean(president?.member_name)}
             </div>
             {pId && <div style={{ position: 'absolute', left: 310, top: 140 + P_OFF, fontSize: 26 }}><b>ID:</b> {pId}</div>}
@@ -322,7 +322,7 @@ export default function ClubDirectoryLayout({
           const sAddr = clean(secretary?.Address);
           const sSpouse = clean(secretary?.Spouse_name);
           return (<>
-            <div style={{ position: 'absolute', left: 26, top: 214 + S_V, width: 424, fontSize: 26, fontWeight: 700, textAlign: 'center' }}>
+            <div style={{ position: 'absolute', left: 26, top: 214 + S_V, maxWidth: 900, fontSize: 26, fontWeight: 700 }}>
               Secretary: {clean(secretary?.member_name)}
             </div>
             {sId && <div style={{ position: 'absolute', left: 26,  top: 250 + S_V, fontSize: 26 }}><b>ID:</b> {sId}</div>}

@@ -4,7 +4,7 @@ import Footer from '@/components/Footer';
 import MemberCard from '@/components/MemberCard';
 import ScrollToTop from '@/components/ScrollToTop';
 import CommitteePDFButton from './CommitteePDFButton';
-import { fetchCommitteeDetails } from '@/lib/api';
+import { fetchCommitteeDetails, displayCommitteeName } from '@/lib/api';
 
 const DESIGNATION_MAP: Record<string, string> = {
   ZAC: 'Zonal Avenue Chair',
@@ -34,7 +34,7 @@ export default async function CommitteeDetailsPage({
 }) {
   const { committeeId } = await params;
   const { title }       = await searchParams;
-  const pageTitle       = title || 'District Committee Members';
+  const pageTitle       = displayCommitteeName(title) || 'District Committee Members';
   const pdfFilename     = `${pageTitle.replace(/\s+/g, '-').toLowerCase()}-2025-26.pdf`;
 
   let records: any[] = [];

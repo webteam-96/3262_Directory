@@ -8,6 +8,16 @@ const YEAR = '2026-2027';
 
 const CLUB_EXTRA: Record<string, { Club_Advisor: string; Sponsor_Club: string; Venue: string; Meeting_City: string }> = clubExtraData;
 
+// Committee name overrides — keyed by the raw API name (lowercased, trimmed).
+const COMMITTEE_NAME_OVERRIDES: Record<string, string> = {
+  'district secretariat': 'Trailblazing District Secretariet',
+};
+
+export function displayCommitteeName(raw: string | null | undefined): string {
+  const n = (raw || '').trim();
+  return COMMITTEE_NAME_OVERRIDES[n.toLowerCase()] ?? n;
+}
+
 async function post(path: string, body: object) {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
@@ -26,9 +36,10 @@ export async function fetchCommitteeList() {
     yearfilter: YEAR,
   });
   const result = data?.TBDistrictCommitteeResult?.Result || {};
+  const rename = (c: any) => ({ ...c, name: displayCommitteeName(c?.name) });
   return {
-    withCat:    result.districtCommitteeWithCatList    || [],
-    withoutCat: result.districtCommitteeWithoutCatList || [],
+    withCat:    (result.districtCommitteeWithCatList    || []).map(rename),
+    withoutCat: (result.districtCommitteeWithoutCatList || []).map(rename),
   };
 }
 

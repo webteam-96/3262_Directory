@@ -14,7 +14,7 @@ const TOP_PAD_MM  = (64.8  / 708.66) * 215 + PX20_MM;
 const BOT_PAD_MM  = ((708.66 - 675) / 708.66) * 215 + PX20_MM;
 const SIDE_PAD_MM = PX20_MM;
 const CONT_W_MM   = B5_W_MM - SIDE_PAD_MM * 2;
-const HEADING_H_MM   = 4;
+const HEADING_H_MM   = 6;   // space reserved for committee name heading (matches individual)
 const CONT_H_MM   = B5_H_MM - TOP_PAD_MM - BOT_PAD_MM - HEADING_H_MM;
 const CARDS_PER_PAGE = 5;
 const GAP_MM         = 2;
@@ -120,7 +120,9 @@ async function generateCommitteePDF(
   totalCommittees: number,
   committeeIndex: number,
 ): Promise<Uint8Array> {
-  const containerW = Math.round(CONT_W_MM * PX_PER_MM);
+  // Match the live committee page's .auto-container inner width (1200 - 2*15 padding)
+  // so MemberCard renders at the same proportions as the individual PDF.
+  const containerW = 1170;
   const container  = document.createElement('div');
   container.style.cssText = `position:fixed;left:-9999px;top:0;width:${containerW}px;background:white;z-index:-1;overflow:hidden;box-sizing:border-box;`;
   document.body.appendChild(container);
@@ -172,7 +174,7 @@ async function generateCommitteePDF(
     for (let j = 0; j < batch.length; j++) {
       setStatus(`Committee ${committeeIndex + 1}/${totalCommittees}: ${committeeName} — card ${i + j + 1}/${total}`);
       const canvas = await html2canvas(batch[j], {
-        scale: 1, useCORS: true, allowTaint: false,
+        scale: 2, useCORS: true, allowTaint: false,
         backgroundColor: '#ffffff', logging: false,
       });
       canvases.push(canvas);
@@ -187,9 +189,9 @@ async function generateCommitteePDF(
     // Committee name heading — only on first page
     if (i === 0) {
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(11);
-      pdf.setTextColor(48, 72, 144);
-      pdf.text(committeeName, B5_W_MM / 2, TOP_PAD_MM + 4, { align: 'center' });
+      pdf.setFontSize(15);
+      pdf.setTextColor(48, 72, 144); // #304890 navy
+      pdf.text(committeeName, B5_W_MM / 2, TOP_PAD_MM + 2, { align: 'center' });
       pdf.setTextColor(0, 0, 0);
     }
   }
@@ -202,7 +204,7 @@ async function generateCommitteePDF(
 
 // ── Fixed committee order for bulk PDF ────────────────────────────────────────
 const COMMITTEE_ORDER = [
-  'District Secretariat',
+  'Trailblazing District Secretariet',
   'District Chief Executive',
   'District Secretary General',
   'District Executive Secretary',
